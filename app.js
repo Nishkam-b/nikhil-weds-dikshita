@@ -122,7 +122,8 @@
           (v ? '<p class="fn__venue">' + esc(L(v.name)) + (v.subtitle ? "<br><span class=\"fn__addr\">" + esc(L(v.subtitle)) + "</span>" : "") + '</p><p class="fn__addr">' + esc(L(v.address)) + "</p>" : "") +
           (ev.note ? '<p class="fn__note">' + esc(L(ev.note)) + (noteV ? ' · <a href="' + esc(mapsUrl(noteV)) + '" target="_blank" rel="noopener">' + esc(t("directions")) + "</a>" : "") + "</p>" : "") +
           (ev.dressCode ? '<p class="fn__dress"><strong>' + esc(t("dress_label")) + ":</strong> " + esc(L(ev.dressCode.text)) + "</p>" : "") +
-          '<div class="actions">' + actionButtons(ev) + "</div>" +
+          (isMain ? '<p class="fn__etiquette">' + esc(t("anand_note")) + "</p>" : "") +
+          '<div class="actions">' + actionButtons(ev) + (isMain && S.film ? '<button class="btn btn--ghost btn--sm" type="button" data-film>' + esc(t("watch_film")) + "</button>" : "") + "</div>" +
         "</article></li>";
     }).join("");
   }
@@ -210,7 +211,6 @@
       bind("contactNames", L(ct.names)); bind("contactAddress", L(ct.address));
       $("#contactPhones").innerHTML = ct.phones.map(function (p) { return '<a href="tel:+91' + p.replace(/\D/g, "") + '">' + esc(p) + "</a>"; }).join("");
     }
-    $("#filmBtn").hidden = !S.film;
     $("#printBtn").hidden = framed;
     var url = shareUrl();
     $("#waBtn").href = "https://wa.me/?text=" + encodeURIComponent(shareText() + (url ? " " + url : ""));
@@ -235,7 +235,7 @@
     });
   }
 
-  function renderAll() { renderStatic(); splitText(); renderTimeline(); renderAnand(); renderVenues(); renderGallery(); renderDress(); tick(); setupReveal(); }
+  function renderAll() { renderStatic(); splitText(); renderTimeline(); renderGallery(); renderDress(); tick(); setupReveal(); }
 
   /* ---------- countdown ---------- */
   var timer;
@@ -345,10 +345,10 @@
     setTimeout(function () { gate.remove(); }, 2600);
     var h = $("#welcomeNames"); if (h) { h.setAttribute("tabindex", "-1"); setTimeout(function () { h.focus({ preventScroll: true }); }, 1200); }
   }
-  if (skipGate) openGate(true);
+  if (skipGate) { openGate(true); if (window.PetalField) PetalField.start(); }
   else {
     body.classList.add("gate-locked");
-    $("#gateBtn").addEventListener("click", function () { openGate(false); });
+    $("#gateBtn").addEventListener("click", function () { playMusic(); openGate(false); });
     gate.addEventListener("keydown", function (e) {
       if (e.key !== "Tab") return;
       var f = $$("button", gate), i = f.indexOf(document.activeElement); e.preventDefault();
@@ -357,28 +357,7 @@
     setTimeout(function () { var b = $("#gateBtn"); b && b.focus({ preventScroll: true }); }, 50);
   }
 
-  /* ---------- falling petals (once, after the gate opens) ---------- */
-  function petals() {
-    var cv = $("#petals"); if (!cv || !cv.getContext || reduce) return;
-    var ctx = cv.getContext("2d"), dpr = Math.min(window.devicePixelRatio || 1, 2), W, H;
-    function size() { W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
-    size(); addEventListener("resize", size);
-    var cols = ["#F1D9D7", "#EBC3C0", "#F6E3E1", "#DCE5D5", "#E9D5A9"];
-    var n = W < 600 ? 26 : 44, ps = [];
-    for (var k = 0; k < n; k++) ps.push({ x: Math.random() * W, y: -20 - Math.random() * H * .9, r: 5 + Math.random() * 6, vy: .7 + Math.random() * 1.1, sw: Math.random() * 6.28, ss: .01 + Math.random() * .02, rot: Math.random() * 6.28, vr: (Math.random() - .5) * .04, c: cols[k % cols.length] });
-    var t0 = performance.now(), dur = 8000;
-    cv.classList.add("on");
-    (function frame(now) {
-      var el = now - t0; ctx.clearRect(0, 0, W, H);
-      var fade = el > dur - 1500 ? Math.max(0, (dur - el) / 1500) : 1;
-      ps.forEach(function (p) {
-        p.sw += p.ss; p.y += p.vy; p.x += Math.sin(p.sw) * .8; p.rot += p.vr;
-        ctx.save(); ctx.globalAlpha = .85 * fade; ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-        ctx.fillStyle = p.c; ctx.beginPath(); ctx.ellipse(0, 0, p.r, p.r * .55, 0, 0, 6.283); ctx.fill(); ctx.restore();
-      });
-      if (el < dur) requestAnimationFrame(frame); else { cv.classList.remove("on"); ctx.clearRect(0, 0, W, H); }
-    })(t0);
-  }
+  function petals() { if (window.PetalField) PetalField.start({ burst: true }); }
 
   /* ---------- scroll-linked motion: parallax + timeline thread ---------- */
   var pxEls = $$("[data-parallax]"), tl = $("#timeline"), ticking = false;
@@ -387,6 +366,7 @@
     pxEls.forEach(function (el) {
       var r = el.getBoundingClientRect(), mid = r.top + r.height / 2 - innerHeight / 2;
       el.style.setProperty("--py", (mid * -parseFloat(el.getAttribute("data-parallax"))).toFixed(1) + "px");
+      if (el.hasAttribute("data-spin")) el.style.setProperty("--spin", (mid * .06).toFixed(2));
     });
     if (tl) {
       var r = tl.getBoundingClientRect();
@@ -429,9 +409,11 @@
 
   /* ---------- film ---------- */
   var fb = $("#filmBox"), fv = $("#filmVideo");
-  function closeFilm() { fv.pause(); fb.hidden = true; document.body.style.overflow = ""; $("#filmBtn").focus(); }
-  $("#filmBtn").addEventListener("click", function () {
-    if (!S.film) return;
+  var filmFrom = null, musicWasOn = false;
+  function closeFilm() { fv.pause(); fb.hidden = true; document.body.style.overflow = ""; filmFrom && filmFrom.focus(); if (musicWasOn) playMusic(); }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-film]"); if (!b || !S.film) return;
+    filmFrom = b; musicWasOn = !bgm.paused; pauseMusic();
     if (!fv.src) { fv.src = S.film.src; if (S.film.poster) fv.poster = S.film.poster; }
     fb.hidden = false; document.body.style.overflow = "hidden"; $("#filmClose").focus();
     var p = fv.play(); if (p && p.catch) p.catch(function () {});
@@ -460,15 +442,23 @@
   });
   $("#printBtn").addEventListener("click", function () { window.print(); });
 
-  /* ---------- music (never autoplays) ---------- */
-  var bgm = $("#bgm"), mb = $("#musicBtn");
-  mb.addEventListener("click", function () {
+  /* ---------- music: starts when the guest taps "Open Invitation" (never autoplays on load) ---------- */
+  var bgm = $("#bgm"), mb = $("#musicBtn"), userPaused = false;
+  function setMusicUi(on) { mb.setAttribute("aria-pressed", String(on)); $(".sr", mb).textContent = t(on ? "music_pause" : "music_play"); }
+  function playMusic() {
     if (!C.music || !C.music.src) return;
-    if (!bgm.src) bgm.src = C.music.src;
-    if (bgm.paused) {
-      bgm.play().then(function () { mb.setAttribute("aria-pressed", "true"); $(".sr", mb).textContent = t("music_pause"); })
-        .catch(function () { mb.hidden = true; });
-    } else { bgm.pause(); mb.setAttribute("aria-pressed", "false"); $(".sr", mb).textContent = t("music_play"); }
+    if (!bgm.src) { bgm.src = C.music.src; }
+    bgm.volume = C.music.volume != null ? C.music.volume : .5;
+    var p = bgm.play();
+    if (p && p.then) p.then(function () { setMusicUi(true); }, function () { setMusicUi(false); });
+  }
+  function pauseMusic() { bgm.pause(); setMusicUi(false); }
+  mb.addEventListener("click", function () {
+    if (bgm.paused) { userPaused = false; playMusic(); } else { userPaused = true; pauseMusic(); }
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) { if (!bgm.paused) { bgm.pause(); bgm.dataset.resume = "1"; } }
+    else if (bgm.dataset.resume) { delete bgm.dataset.resume; if (!userPaused) playMusic(); }
   });
   bgm.addEventListener("error", function () { mb.hidden = true; });
 

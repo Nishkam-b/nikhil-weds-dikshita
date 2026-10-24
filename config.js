@@ -177,8 +177,8 @@ window.WEDDING = {
   ],
 
   /* ---------------- Background music ----------------
-     Off by default. To add an instrumental, put the file in  and set src.  */
-  music: { src: "", title: { en: "", pa: "" } },
+     Starts at 50% volume when the guest taps "Open Invitation"; guests can pause it from the top bar.  */
+  music: { src: "wedding-music.mp3", volume: 0.5, title: { en: "", pa: "" } },
 
   /* ---------------- Sharing ---------------- */
   shareMessage: {

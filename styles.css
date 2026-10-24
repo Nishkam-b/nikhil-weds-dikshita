@@ -210,6 +210,7 @@ html[lang="pa"] .welcome__place { letter-spacing: .02em; font-size: .95rem; }
 
   /* parallax */
   [data-parallax] { translate: 0 var(--py, 0px); }
+  .js .orn { transition: opacity 1.4s var(--ease); }
   .anand__frame img { scale: 1.14; }
 }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
@@ -263,7 +264,18 @@ html[lang="pa"] .gate__date { letter-spacing: 0; font-size: 1rem; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
 /* ---------- sections ---------- */
-.section { padding-block: clamp(64px, 11vw, 120px); position: relative; }
+.section { padding-block: clamp(64px, 11vw, 120px); position: relative; overflow: clip; }
+.section > .wrap { position: relative; z-index: 1; }
+/* section ornaments: drift with parallax, mandalas turn slowly as you scroll */
+.orn { position: absolute; pointer-events: none; z-index: 0; }
+.orn--sprig { width: clamp(150px, 26vw, 300px); height: clamp(150px, 26vw, 300px); opacity: .55; }
+.orn--sprig.orn--l { left: -50px; top: 6%; transform: scaleY(-1) rotate(-12deg); }
+.orn--sprig.orn--r { right: -50px; top: 30%; transform: scaleX(-1) rotate(10deg); }
+.orn--sprig.orn--low { top: auto; bottom: 4%; }
+.orn--mandala { width: clamp(280px, 60vw, 560px); height: clamp(280px, 60vw, 560px); opacity: .22; rotate: calc(var(--spin, 0) * 1deg); }
+.orn--center { left: 50%; top: 50%; margin: calc(clamp(280px, 60vw, 560px) / -2) 0 0 calc(clamp(280px, 60vw, 560px) / -2); }
+.orn--right { right: -12%; top: 10%; }
+.orn--left-sm { left: -8%; bottom: 0; width: clamp(160px, 30vw, 300px); height: clamp(160px, 30vw, 300px); opacity: .18; }
 .sec-head { text-align: center; margin-bottom: 2.6rem; }
 
 /* 2 blessings */
@@ -329,6 +341,7 @@ html[lang="pa"] .fn__date { font-family: var(--f-gm-display); font-size: 1.05rem
 .fn__note { font-style: italic; color: var(--ink-soft); font-size: .95rem; }
 .fn__note a { color: var(--gold-ink); }
 .fn__dress { font-size: .92rem; }
+.fn__etiquette { font-size: .9rem; color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: .6rem; margin-top: .3rem; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: .8rem; }
 .cal { position: relative; }
 .cal__menu {
@@ -451,7 +464,7 @@ html[lang="pa"] .totop { letter-spacing: 0; font-size: 1rem; }
 @media print {
   @page { size: A4; margin: 14mm; }
   body { background: #fff; font-size: 11pt; }
-  .topbar, .skip, .btn, .share, .totop, .lightbox, .toast, .sprig, #filmBtn, .gallery, .countdown, .lang, .gate, .petals, .cal, .actions, .venue__btns, #musicBtn, .welcome .btn { display: none !important; }
+  .topbar, .skip, .btn, .share, .totop, .lightbox, .toast, .sprig, .orn, #filmBtn, .gallery, .countdown, .lang, .gate, .petals, .cal, .actions, .venue__btns, #musicBtn, .welcome .btn { display: none !important; }
   .section { padding-block: 10mm; background: #fff !important; }
   .welcome { padding-block: 0 6mm; }
   .arch { width: 120mm; }
