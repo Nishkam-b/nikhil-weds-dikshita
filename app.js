@@ -199,7 +199,7 @@
     bind("first", first()); bind("second", second());
     bind("city", lang === "pa" ? "ਸ੍ਰੀ ਗੰਗਾਨਗਰ" : "Sri Ganganagar");
     bind("mainDate", mainEv ? fmtDate(mainEv.date) : "");
-    bind("mainDateTime", mainEv ? fmtDate(mainEv.date) + " · " + fmtRange(mainEv) : "");
+    bind("mainTime", mainEv ? fmtRange(mainEv) : "");
     var mv = mainEv && venueOf(mainEv.venue);
     bind("mainVenue", mv ? L(mv.name) + (mv.subtitle ? " · " + L(mv.subtitle) : "") + ", " + L(mv.address) : "");
     bind("blessingLine", L(S.blessingLine));
@@ -235,7 +235,7 @@
     });
   }
 
-  function renderAll() { renderStatic(); splitText(); renderTimeline(); renderGallery(); renderDress(); tick(); setupReveal(); }
+  function renderAll() { renderStatic(); splitText(); renderTimeline(); renderDress(); tick(); setupReveal(); }
 
   /* ---------- countdown ---------- */
   var timer;

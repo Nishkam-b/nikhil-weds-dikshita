@@ -306,6 +306,9 @@ html[lang="pa"] .couple-name { font-style: normal; font-size: clamp(2rem, 7vw, 2
 html[lang="pa"] .with { font-family: var(--f-gm-display); font-style: normal; }
 .inv-date { font-family: var(--f-display); font-size: 1.35rem; }
 html[lang="pa"] .inv-date { font-family: var(--f-gm-display); font-size: 1.1rem; }
+.inv-time { font-family: var(--f-body); font-size: 1.05rem; letter-spacing: .04em; color: var(--sage-ink); white-space: nowrap; margin-bottom: .4rem; }
+html[lang="pa"] .inv-time { font-family: var(--f-gm-body); letter-spacing: 0; text-transform: none; font-size: 1.05rem; }
+.cd__time { display: block; }
 .inv-venue { color: var(--ink-soft); }
 .inv-foot { display: grid; gap: 1.4rem; margin-top: 2rem; width: 100%; }
 @media (min-width: 560px) { .inv-foot { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); } }
